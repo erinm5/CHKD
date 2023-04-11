@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<head>
+    <title>Home</title>
+</head>
+<body>
+    <h1 style="text-align:center">Quest: {{quest}}</h1>
+
+    <h2 style="text-align:center">Rules: {{rules}}</h2>
+
+    <h3 style="text-align:center">
+    <form method='POST' enctype='multipart/form-data'>
+        {{form.hidden_tag()}}
+        {{form.file()}}
+        {{form.submit()}}
+    </form>
+    </h3>
+</body>
+</html>
