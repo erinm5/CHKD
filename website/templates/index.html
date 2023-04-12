@@ -1,26 +1,28 @@
-<!--  how to use css in python_ flask-->
 <!DOCTYPE html>
-<html lang="en">
 <head>
-<!--  Load CSS in Flask with html-->
-    <link rel="stylesheet" href='/static/core.css' />
- 
-<!--  Load JavaScript in Flask with html-->
-  <!--script>
-    alert("Page has been loaded successfully")
-  </script-->
- 
-  </head>
-  <body>
-    <div class="login">
-        <h1>CHKD</h1>
-        <form>
-            <input class="login-text" type="text" id="username" name="username"  placeholder="Username" required><br><br>
-            <input class="login-text" type="password" id="pass" name="pass"  placeholder="Password" required>
-            <br><br><br>
-            <input type="submit" value="Login">
-        </form>
-    </div>
+    <title>Home</title>
+</head>
+<body>
 
+    <h1 style="text-align:center">Welcom to Quests:
+    <div>{{user}}</div>
+    </h1>
+
+    {%if quest_check == 0 :%}
+        <h2 style="text-align:center">No quest has been created yet, create a quest!:</h2>
+        <h3 style="text-align:center">
+        <form action="#" method="post">
+        <button type="submit">Start</button>
+        </form>    
+        </h3>
+    {%else:%}
+        <h2 style="text-align:center">A quest has been already created!:</h2>
+        <h3 style="text-align:center">
+        <form action="#" method="post">
+        <button type="submit">veiw</button>
+        </form>    
+        </h3>
+    {%endif%}
+        
 </body>
 </html>

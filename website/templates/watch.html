@@ -4,8 +4,7 @@
 </head>
 <body>
     <h1 style="text-align:center">Veiwing Submissions</h1>
-    <h2 style="text-align:center">Current Directory trying to be loaded:</h2>
-    <h3 style="text-align:center"> {{user_image}} </h3style>
+    <h2 style="text-align:center"> {{user_input}} </h2style>
     <div style="text-align: center">
         {% if media == 1: %}
             <img src="{{url_for('static', filename=user_input)}}">
@@ -21,10 +20,6 @@
             <h1>Unsupported fromat</h1>
         {% endif %}
         
-
-
-
-
 
 
         <h3>Load Another Submission</h3>
