@@ -1,0 +1,38 @@
+body {
+    background: black;
+    color: white;
+    margin-top: 50px;
+    margin-left: 100px;
+}
+
+.login 
+{
+    padding: 100px;
+    text-align: center;    
+}
+
+.login-text
+{
+    height: 30px;
+    width: 300px;
+}
+
+h1 {
+    font-family: Verdana, Geneva, sans-serif;
+    letter-spacing: 5px;
+    font-size: 5em;
+    color: white;
+}
+   
+p {
+    font-family: Verdana, sans-serif;
+    font-size: 1.2em;
+    color: DarkSlateGray;
+}
+
+.center {
+    margin: auto;
+    width: 50%;
+    border: 3px solid green;
+    padding: 10px;
+}
