@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request
+from flask import Flask, render_template, redirect, url_for, request, session, flash
 from flask_wtf import FlaskForm
 from wtforms import FileField, SubmitField, StringField
 from wtforms.widgets import TextArea
@@ -45,6 +45,15 @@ class Groups():
     def add_quest(self, quest, rules):
         self.quest = quest
         self.rules = rules 
+class Submission():
+    def __init__(self, user, file):
+        self.user = user
+        self.file = file
+        self.votes = 0
+    def upvote(self):
+        self.votes += 1
+    def downvote(self):
+        self.votes -=1
 
 #mediaType(), given an image name checks what type of media was uploaded
 #returns an int 1-image, 2-video, 3-audio
@@ -61,7 +70,7 @@ def mediaType(img_name):
 
 #FAKE DATABSE!
 #This is here beacause I havent connected the website to the data base yet
-temp_submissions = []  #temp array to hold media url, and ratings
+temp_submissions = []  #temp array to all quest submissions
 temp_group = Groups("none", 0)#temp group fo testing
 
 
@@ -73,23 +82,26 @@ temp_group = Groups("none", 0)#temp group fo testing
 def login():
     form = LoginForm()
     if request.method == "POST":
-        user_name = str(form.name.data)
+        session["user"] = str(form.name.data)
         print("this ran")
-        return redirect(url_for('home', user = user_name))
+        return redirect(url_for('home'))
     return(render_template('login.html', form = form))
     
 #home page
-@app.route('/home/<user>', methods=['GET',"POST"])
-def home(user):
-    quest_check = 0 #checks if a quest has been made yet
-    if(temp_group.quest != ""):
-        quest_check = 1
-    if request.method == "POST":
-        if(quest_check):
-            return redirect(url_for('upload', group = temp_group.id))
-        else:
-            return redirect(url_for('create'))         
-    return render_template('index.html', quest_check = quest_check, user = user)
+@app.route('/home', methods=['GET',"POST"])
+def home():
+    #check that the user actually sigined in and didn't manualy type the url
+    if "user" in session:
+        quest_check = 0 #checks if a quest has been made yet
+        if(temp_group.quest != ""):
+            quest_check = 1
+        if request.method == "POST":
+            if(quest_check):
+                return redirect(url_for('upload', group = temp_group.id))
+            else:
+                return redirect(url_for('create'))
+    else: return redirect(url_for('login'))         
+    return render_template('index.html', quest_check = quest_check, user = session["user"])
 
 
 #/create, collects text information to create a task
@@ -118,7 +130,8 @@ def upload(group):
         #save the file to (file location of root + file in root + file name)
         file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),app.config['MEDIA_FOLDER'],secure_filename(str(file_num) + file.filename))) # Then save the file
         #update the fake databse
-        temp_submissions.append(0)
+        sub =Submission(session["user"], file.filename)
+        temp_submissions.append(sub)
         return redirect(url_for('watch', curr = 0))
     return render_template('upload.html', form=form, quest = quest_msg, rules =rules_msg)
            
@@ -146,32 +159,40 @@ def watch(curr):
         if(button == "NEW"):
             return redirect(url_for('upload', group = temp_group.id))
         if(button == "UP"):
-            temp_submissions[curr] += 1
+            temp_submissions[curr].upvote()
             print("Current vote counter:")
-            print(temp_submissions[curr])
+            print(temp_submissions[curr].votes)
             return redirect(url_for('results'))        
         #load next media file
         return redirect(url_for('watch', curr=curr))
     # Load the webpage
     else:
-            return  render_template('watch.html', user_input = img_name, media = mediaType(img_name), curr = curr, files = folder_len)
+            return  render_template('watch.html', user = temp_submissions[curr].user, filename = temp_submissions[curr].file, user_input = img_name, media = mediaType(img_name), curr = curr, files = folder_len)
     
 
  #/results, webpage to veiw the top upvoted
  #this is not fully coded yet
 @app.route('/results', methods=['GET', 'POST'])
 def results():
+    unsorted = []
     winner_index = 0
-    #get into the root path
-    root_path = os.path.dirname(os.path.abspath(__file__))
-    #get the folder
-    folder =  os.listdir(os.path.join(root_path, 'static'))
-    folder_len = len(folder) -1 
-    #get the first file name from the media folder
-    img_name = os.listdir(os.path.join(root_path, 'static'))[winner_index]
+
+    folder_len = len(os.listdir(os.path.join(root_path, app.config['MEDIA_FOLDER'])))
+    print("This is the current "+ str(folder_len))
+    for votes in range(folder_len):
+        unsorted.append((temp_submissions[votes].votes))
+    num_votes  = max(unsorted)
+
+    for votes in range(folder_len):
+        if temp_submissions[votes].votes == num_votes:
+            winner_index = votes
+
+    user_name = temp_submissions[winner_index].user
+    file_name = temp_submissions[winner_index].file
+    img_name = 'media/' + os.listdir(os.path.join(root_path, app.config['MEDIA_FOLDER']))[winner_index]
     print(img_name)
     print(winner_index)
-    return  render_template('results.html', user_input = img_name, media = mediaType(img_name), votes = 0)       
+    return  render_template('results.html', user =user_name, file = file_name, user_input = img_name, media = mediaType(img_name), votes = num_votes)       
 
 
 
