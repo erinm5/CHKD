@@ -15,8 +15,11 @@ audio_formats = [".mp3", ".m4a", ".wav"] # hardcoded audio formats
 #root of the website folder
 root_path = os.path.dirname(os.path.abspath(__file__))
 app = Flask(__name__)
+# following string is stored in cookies
 app.config['SECRET_KEY'] = 'nerf'
+
 app.config['MEDIA_FOLDER'] = 'static\media'
+# 10 mb content length
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 
 #gets quest creation info
@@ -48,6 +51,7 @@ class Groups():
         self.rules = rules
     def add_submission(self, submission):
         self.submissions.append(submission)
+
 class Submission():
     def __init__(self, user, file):
         self.user = user
@@ -76,7 +80,10 @@ def mediaType(img_name):
 temp_submissions = []  #temp array to all quest submissions
 temp_group = Groups("none", 0)#temp group fo testing
 
+# post means user input
+# get means get from server
 
+# first thing after main
 #creates the website on localhost:5000
 @app.route('/', methods=['GET',"POST"])
 
@@ -85,6 +92,7 @@ temp_group = Groups("none", 0)#temp group fo testing
 def login():
     form = LoginForm()
     if request.method == "POST":
+        # dictionary of cookies
         session["user"] = str(form.name.data)
         print("this ran")
         return redirect(url_for('home'))
