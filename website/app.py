@@ -1,3 +1,7 @@
+# Database Libraries
+import chkd_db
+import sqlalchemy
+
 from flask import Flask, render_template, redirect, url_for, request, session, flash
 from flask_wtf import FlaskForm
 from wtforms import FileField, SubmitField, StringField
@@ -7,6 +11,11 @@ from flask_wtf.file import FileField, FileAllowed
 import os
 from wtforms.validators import InputRequired, DataRequired, Length
 import socket
+
+
+
+# Create Postgres Database Engine
+engine = sqlalchemy.create_engine('postgresql://postgres:postgres@localhost:5432/CHKD')
 
 video_formats = [".mp4", ".webm"] # hardcoded video formats
 image_formats = [".jpg", ".png", "jpeg", ".gif",".bmp"] # hardcoded image formats
@@ -31,7 +40,7 @@ class UploadFileForm(FlaskForm):
 
 #get login info
 class LoginForm(FlaskForm):
-    name = StringField('name', validators=[DataRequired(), Length(max= 30)])
+    name = StringField('username', validators=[DataRequired(), Length(max= 30)])
     password = StringField('password', validators=[DataRequired(), Length(max= 30)])
     login = SubmitField("Login")
 
@@ -45,6 +54,7 @@ class Groups():
     def add_quest(self, quest, rules):
         self.quest = quest
         self.rules = rules 
+
 class Submission():
     def __init__(self, user, file):
         self.user = user
@@ -80,17 +90,36 @@ temp_group = Groups("none", 0)#temp group fo testing
 #login page
 @app.route('/login', methods=['GET',"POST"])
 def login():
+
     form = LoginForm()
     if request.method == "POST":
-        session["user"] = str(form.name.data)
-        print("this ran")
-        return redirect(url_for('home'))
+        # Get the input from user
+        username = str(form.name.data)
+        password = str(form.password.data)
+
+        # Call to Database
+        user_id = chkd_db.login(username, password)
+
+        # User login failed
+        if(user_id == -1):
+            flash("The username or password you’ve entered is incorrect. Try again")
+            print("Fail")
+        
+        # User login success!
+        else:
+            session["user"] = username
+
+            # Go to home page
+            session.pop('_flashes',None)
+            return redirect(url_for('home'))
+        
+    # Close out of DB after using DB / webapp
     return(render_template('login.html', form = form))
     
 #home page
 @app.route('/home', methods=['GET',"POST"])
 def home():
-    #check that the user actually sigined in and didn't manualy type the url
+    #check that the user actually sigined in and didn't manually type the url
     if "user" in session:
         quest_check = 0 #checks if a quest has been made yet
         if(temp_group.quest != ""):
@@ -199,9 +228,10 @@ def results():
 if __name__ == '__main__':
     '''
     #Uncomment if you want everyone on your local network to connect!
-    #This will work on eduroam or umbc vistor for a class demostration 
-    #your new url will be given in the termianl
+    #This will work on eduroam or umbc vistor for a class demonstration 
+    #your new url will be given in the terminal
     print(socket.gethostbyname(socket.gethostname()))
     app.run(debug=True, host = "0.0.0.0", port = 25565)
     '''
     app.run(debug=True)
+    #chkd_db.finished()
