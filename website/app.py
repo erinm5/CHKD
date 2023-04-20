@@ -1,7 +1,3 @@
-# Database Libraries
-import chkd_db
-import sqlalchemy
-
 from flask import Flask, render_template, redirect, url_for, request, session, flash
 from flask_wtf import FlaskForm
 from wtforms import FileField, SubmitField, StringField
@@ -11,11 +7,6 @@ from flask_wtf.file import FileField, FileAllowed
 import os
 from wtforms.validators import InputRequired, DataRequired, Length
 import socket
-
-
-
-# Create Postgres Database Engine
-engine = sqlalchemy.create_engine('postgresql://postgres:postgres@localhost:5432/CHKD')
 
 video_formats = [".mp4", ".webm"] # hardcoded video formats
 image_formats = [".jpg", ".png", "jpeg", ".gif",".bmp"] # hardcoded image formats
@@ -40,7 +31,7 @@ class UploadFileForm(FlaskForm):
 
 #get login info
 class LoginForm(FlaskForm):
-    name = StringField('username', validators=[DataRequired(), Length(max= 30)])
+    name = StringField('name', validators=[DataRequired(), Length(max= 30)])
     password = StringField('password', validators=[DataRequired(), Length(max= 30)])
     login = SubmitField("Login")
 
@@ -51,10 +42,12 @@ class Groups():
         self.id = id
         self.quest = ""
         self.rules = ""
+        self.submissions = []
     def add_quest(self, quest, rules):
         self.quest = quest
-        self.rules = rules 
-
+        self.rules = rules
+    def add_submission(self, submission):
+        self.submissions.append(submission)
 class Submission():
     def __init__(self, user, file):
         self.user = user
@@ -90,36 +83,17 @@ temp_group = Groups("none", 0)#temp group fo testing
 #login page
 @app.route('/login', methods=['GET',"POST"])
 def login():
-
     form = LoginForm()
     if request.method == "POST":
-        # Get the input from user
-        username = str(form.name.data)
-        password = str(form.password.data)
-
-        # Call to Database
-        user_id = chkd_db.login(username, password)
-
-        # User login failed
-        if(user_id == -1):
-            flash("The username or password you’ve entered is incorrect. Try again")
-            print("Fail")
-        
-        # User login success!
-        else:
-            session["user"] = username
-
-            # Go to home page
-            session.pop('_flashes',None)
-            return redirect(url_for('home'))
-        
-    # Close out of DB after using DB / webapp
+        session["user"] = str(form.name.data)
+        print("this ran")
+        return redirect(url_for('home'))
     return(render_template('login.html', form = form))
     
 #home page
 @app.route('/home', methods=['GET',"POST"])
 def home():
-    #check that the user actually sigined in and didn't manually type the url
+    #check that the user actually sigined in and didn't manualy type the url
     if "user" in session:
         quest_check = 0 #checks if a quest has been made yet
         if(temp_group.quest != ""):
@@ -137,101 +111,108 @@ def home():
 #returns the upload page after any text is sumbitted
 @app.route('/create', methods=['GET', 'Post'])
 def create():
-    #create the quest
-    form = QuestForm()
-    if request.method == "POST":
-        quest = form.quest.data # First grab the file
-        rules = form.rules.data
-        temp_group.add_quest(quest, rules)
-        return redirect(url_for('upload', group = temp_group.id))
-    return render_template("create.html", form = form)
+    if "user" in session:
+        #create the quest
+        form = QuestForm()
+        if request.method == "POST":
+            quest = form.quest.data # First grab the file
+            rules = form.rules.data
+            temp_group.add_quest(quest, rules)
+            return redirect(url_for('upload', group = temp_group.id))
+        return render_template("create.html", form = form)
+    else: return redirect(url_for('login'))
 
 #/upload/<group> uploads files from the websever to the database, given the group number
 #returns redirect to watch page to veiw the submissions
 @app.route('/upload/<group>', methods=["GET", "POST"])
 def upload(group):
-    file_num = len(os.listdir(os.path.join(root_path, app.config['MEDIA_FOLDER']))) 
-    quest_msg = temp_group.quest
-    rules_msg = temp_group.rules
-    form = UploadFileForm()
-    if form.validate_on_submit():
-        file = form.file.data # First grab the file
-        #save the file to (file location of root + file in root + file name)
-        file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),app.config['MEDIA_FOLDER'],secure_filename(str(file_num) + file.filename))) # Then save the file
-        #update the fake databse
-        sub =Submission(session["user"], file.filename)
-        temp_submissions.append(sub)
-        return redirect(url_for('watch', curr = 0))
-    return render_template('upload.html', form=form, quest = quest_msg, rules =rules_msg)
+    if "user" in session:
+        file_num = len(os.listdir(os.path.join(root_path, app.config['MEDIA_FOLDER']))) 
+        quest_msg = temp_group.quest
+        rules_msg = temp_group.rules
+        form = UploadFileForm()
+        if form.validate_on_submit():
+            file = form.file.data # First grab the file
+            #save the file to (file location of root + file in root + file name)
+            file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),app.config['MEDIA_FOLDER'],secure_filename(str(file_num) + file.filename))) # Then save the file
+            #update the fake databse
+            sub =Submission(session["user"], file.filename)
+            temp_submissions.append(sub)
+            return redirect(url_for('watch', curr = 0))
+        return render_template('upload.html', form=form, quest = quest_msg, rules =rules_msg)
+    else: return redirect(url_for('login'))  
            
 
 #/watch/<curr> creates webpage to veiw the actual submissions, curr is the submission
 #returns the next or previous submission, or redirects to the voting page
 @app.route('/watch/<curr>', methods=['GET', 'POST'])
 def watch(curr):
-    curr = int(curr)
-    folder_len = len(os.listdir(os.path.join(root_path, app.config['MEDIA_FOLDER']))) -1
-    img_name = 'media/' + os.listdir(os.path.join(root_path, app.config['MEDIA_FOLDER']))[curr]
-    #check what button is pressed
-    if request.method == "POST":
-        button = request.form["submit_button"]
-        if(button == "NEXT"):
-            if curr == folder_len:
-                print(folder_len)
-            else:
-                curr += 1
-        if(button == "PREV"):
-            if curr == 0:
-                print("No previous files")
-            else:
-                curr -= 1
-        if(button == "NEW"):
-            return redirect(url_for('upload', group = temp_group.id))
-        if(button == "UP"):
-            temp_submissions[curr].upvote()
-            print("Current vote counter:")
-            print(temp_submissions[curr].votes)
-            return redirect(url_for('results'))        
-        #load next media file
-        return redirect(url_for('watch', curr=curr))
-    # Load the webpage
-    else:
-            return  render_template('watch.html', user = temp_submissions[curr].user, filename = temp_submissions[curr].file, user_input = img_name, media = mediaType(img_name), curr = curr, files = folder_len)
-    
+    if "user" in session:
+        curr = int(curr)
+        folder_len = len(os.listdir(os.path.join(root_path, app.config['MEDIA_FOLDER']))) -1
+        img_name = 'media/' + os.listdir(os.path.join(root_path, app.config['MEDIA_FOLDER']))[curr]
+        #check what button is pressed
+        if request.method == "POST":
+            button = request.form["submit_button"]
+            if(button == "NEXT"):
+                if curr == folder_len:
+                    print(folder_len)
+                else:
+                    curr += 1
+            if(button == "PREV"):
+                if curr == 0:
+                    print("No previous files")
+                else:
+                    curr -= 1
+            if(button == "NEW"):
+                return redirect(url_for('upload', group = temp_group.id))
+            if(button == "UP"):
+                temp_submissions[curr].upvote()
+                print("Current vote counter:")
+                print(temp_submissions[curr].votes)
+                return redirect(url_for('results'))        
+            #load next media file
+            return redirect(url_for('watch', curr=curr))
+        # Load the webpage
+        else:
+                return  render_template('watch.html', user = temp_submissions[curr].user, filename = temp_submissions[curr].file, user_input = img_name, media = mediaType(img_name), curr = curr, files = folder_len)
+    else: return redirect(url_for('login'))   
 
- #/results, webpage to veiw the top upvoted
+ #/results, webpage to veiw the top upvoted, does not handle ties correctly 
  #this is not fully coded yet
 @app.route('/results', methods=['GET', 'POST'])
 def results():
-    unsorted = []
-    winner_index = 0
+    if "user" in session:
+        unsorted = []
+        winner_index = 0
+        #This is a really bad way to get the top voted
+        folder_len = len(os.listdir(os.path.join(root_path, app.config['MEDIA_FOLDER'])))
+        print("This is the current "+ str(folder_len))
+        for votes in range(folder_len):
+            unsorted.append((temp_submissions[votes].votes))
+        num_votes  = max(unsorted)
 
-    folder_len = len(os.listdir(os.path.join(root_path, app.config['MEDIA_FOLDER'])))
-    print("This is the current "+ str(folder_len))
-    for votes in range(folder_len):
-        unsorted.append((temp_submissions[votes].votes))
-    num_votes  = max(unsorted)
+        for votes in range(folder_len):
+            if temp_submissions[votes].votes == num_votes:
+                winner_index = votes
 
-    for votes in range(folder_len):
-        if temp_submissions[votes].votes == num_votes:
-            winner_index = votes
-
-    user_name = temp_submissions[winner_index].user
-    file_name = temp_submissions[winner_index].file
-    img_name = 'media/' + os.listdir(os.path.join(root_path, app.config['MEDIA_FOLDER']))[winner_index]
-    print(img_name)
-    print(winner_index)
-    return  render_template('results.html', user =user_name, file = file_name, user_input = img_name, media = mediaType(img_name), votes = num_votes)       
+        user_name = temp_submissions[winner_index].user
+        file_name = temp_submissions[winner_index].file
+        img_name = 'media/' + os.listdir(os.path.join(root_path, app.config['MEDIA_FOLDER']))[winner_index]
+        print(img_name)
+        print(winner_index)
+        return  render_template('results.html', user =user_name, file = file_name, user_input = img_name, media = mediaType(img_name), votes = num_votes)       
+    else: return redirect(url_for('login'))   
 
 
 
 if __name__ == '__main__':
-    '''
+    
     #Uncomment if you want everyone on your local network to connect!
-    #This will work on eduroam or umbc vistor for a class demonstration 
-    #your new url will be given in the terminal
+    #This will work on eduroam or umbc vistor for a class demostration 
+    #your new url will be given in the termianl
+    '''
     print(socket.gethostbyname(socket.gethostname()))
     app.run(debug=True, host = "0.0.0.0", port = 25565)
     '''
     app.run(debug=True)
-    #chkd_db.finished()
