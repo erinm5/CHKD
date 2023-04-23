@@ -65,6 +65,23 @@ class Submission():
     def downvote(self):
         self.votes -=1
 
+    
+# def getGroups():
+#     groups = [
+#         {"name": "The Blue Boys", "hasNotification": False, "completedTasks": 2, "totalTasks": 5, "totalMembers": 6, "isMember": True},
+#         {"name": "The Blue Boys", "hasNotification": True, "completedTasks": 1, "totalTasks": 3, "totalMembers": 12, "isMember": True},
+#         {"name": "The Blue Boys", "hasNotification": False, "completedTasks": 11, "totalTasks": 12, "totalMembers": 3, "isMember": True},
+#         {"name": "The Blue Boys", "hasNotification": False, "completedTasks": 2, "totalTasks": 5, "totalMembers": 6, "isMember": False}
+#     ]
+#     return groups
+
+# def getFriends():
+#     friends = [
+#         {"name": "ThwompFriend12", "isFriend": True},
+#         {"name": "ToothStealer", "isFriend": False}
+#     ]
+#     return friends
+
 #mediaType(), given an image name checks what type of media was uploaded
 #returns an int 1-image, 2-video, 3-audio
 def mediaType(img_name):
@@ -119,6 +136,18 @@ def login():
 #home page
 @app.route('/home', methods=['GET',"POST"])
 def home():
+    # Hard coded groups and friends. This eventually needs to come from the database
+    groups = [
+        {"name": "The Blue Boys", "hasNotification": False, "completedTasks": 2, "totalTasks": 5, "totalMembers": 6, "isMember": True},
+        {"name": "The Whalers", "hasNotification": True, "completedTasks": 1, "totalTasks": 3, "totalMembers": 12, "isMember": True},
+        {"name": "Team 3: Best!", "hasNotification": False, "completedTasks": 11, "totalTasks": 12, "totalMembers": 3, "isMember": True},
+        {"name": "Gang X", "hasNotification": False, "completedTasks": 2, "totalTasks": 5, "totalMembers": 6, "isMember": False}
+    ]
+
+    friends = [
+        {"name": "ThwompFriend12", "isFriend": True},
+        {"name": "ToothStealer", "isFriend": False}
+    ]
     #check that the user actually sigined in and didn't manually type the url
     if "user" in session:
         quest_check = 0 #checks if a quest has been made yet
@@ -130,7 +159,7 @@ def home():
             else:
                 return redirect(url_for('create'))
     else: return redirect(url_for('login'))         
-    return render_template('index.html', quest_check = quest_check, user = session["user"])
+    return render_template('index.html', quest_check = quest_check, user = session["user"], groups=groups, friends=friends)
 
 
 #/create, collects text information to create a task
