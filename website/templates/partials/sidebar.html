@@ -1,0 +1,110 @@
+
+<!DOCTYPE html>
+<body>
+    <!-- Sidebar Title -->
+    <h1 style="text-align:center"> 
+        CHKD Sidebar 
+    </h1>
+
+    <!-- Horizontal Line -->
+    <hr>
+
+    <!-- Group Section -->
+    <!-- Group Header -->
+    <div class="container" style="display: flex;">
+        <div style="width: 50%;">
+            Groups
+        </div>
+        <div style="flex-grow: 1;">
+            <button type="button">
+                New Group
+            </button>
+        </div>
+
+    </div>
+    <!-- Group List -->
+    <div>
+        <!-- Makes a row for each group -->
+        {% for group in groups %}
+            <div class="container" style="display: flex;">
+                <div style="flex-grow: 1;"> 
+                    {{group.name}}
+                </div>
+                <div style="flex-grow: 1;">
+                    <!-- Has dot if there's a notification in that group. Replace * with small image -->
+                    {% if group.hasNotification %}
+                        *
+                    {% endif %}
+                    
+                    <!-- Still needs check icon after this -->
+                    {{group.completedTasks}}/{{group.totalTasks}}
+
+                    <!-- Needs member icon after this -->
+                    {{group.totalMembers}}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Horizontal Line -->
+    <hr>
+
+    <!-- Friend Section -->
+    <!-- Friend Header -->
+    <div class="container" style="display: flex;">
+        <div style="width: 50%;">
+            Friends
+        </div>
+        <div style="flex-grow: 1;">
+            <button type="button">
+                Add Friend
+            </button>
+        </div>
+
+    </div>
+    <!-- Friend List -->
+    <div>
+        <!-- Makes a row for each friend -->
+        {% for friend in friends %}
+            <div class="container" style="display: flex;">
+                <div style="flex-grow: 1;"> 
+                    {{friend.name}}
+                </div>
+                <div style="flex-grow: 1;">
+                    <!-- Checks friend status to decide which to show -->
+                    {% if friend.isFriend %}
+                        <!-- Replace buttons with hamburger menu? -->
+                        <button type="button">
+                            Remove friend
+                        </button>
+                    <!-- If not friend, give user choice to accept/decline friend request -->
+                    {% else %}
+                        <button type="button">
+                            Accept
+                        </button>
+                        <button type="button">
+                            Decline
+                        </button>
+                    {%endif%}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Horizontal Line -->
+    <hr>
+
+    <!-- Footer -->
+    <div class="container" style="display: flex;">
+        <div style="flex-grow: 1;">
+            <button type="button">
+                Settings
+            </button>
+            <button type="button">
+                Log-out
+            </button>
+        </div>
+
+    </div>
+</body>
+</html>
