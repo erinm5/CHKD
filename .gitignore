@@ -1,3 +1,4 @@
 # gitignore
 # media folder
 website/static/media/
+website/__pycache__/
