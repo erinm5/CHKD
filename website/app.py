@@ -241,7 +241,7 @@ def watch(curr):
         return redirect(url_for('watch', curr=curr))
     # Load the webpage
     else:
-            return  render_template('watch.html', user = temp_submissions[curr].user, filename = temp_submissions[curr].file, comments = temp_submissions[curr].comments , user_input = img_name, media = mediaType(img_name), curr = curr, files = folder_len, groups=groups, friends=friends, groups=groups, friends=friends, form = form)
+            return  render_template('watch.html', user = temp_submissions[curr].user, filename = temp_submissions[curr].file, comments = temp_submissions[curr].comments , user_input = img_name, media = mediaType(img_name), curr = curr, files = folder_len, groups=groups, friends=friends, form = form)
     
 
  #/results, webpage to veiw the top upvoted
