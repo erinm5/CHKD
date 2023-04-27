@@ -3,7 +3,7 @@ Install Python https://www.python.org/downloads/
 Install VSCODE https://code.visualstudio.com/download
 Open the folder in VSCODE
 open VSCODE terminal(CTRL + `)
-pip3 install flask, flask_wtf, werkzeug, wtforms, numpy, pytz, psycopg2
+pip3 install flask, flask_wtf, werkzeug, wtforms, numpy, pytz, psycopg2, sqlalchemy
 go to command pallet (CTRL+SHIT+P)
 search for Python Select: Interpretor
 pick global
