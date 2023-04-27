@@ -6,8 +6,8 @@
     <link rel="stylesheet" href='/static/core.css' />
   </head>
   <body>
-   
     <div class="login">
+   
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <ul class=flashes>
@@ -17,7 +17,7 @@
             </ul>
         {% endif %}
         {% endwith %}
-    
+      
         <h1>CHKD</h1>
         <form method="POST">
             {{form.name(size = 30, placeholder="Username" )}}
