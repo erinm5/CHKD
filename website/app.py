@@ -1,3 +1,7 @@
+# Database Libraries
+import chkd_db
+import sqlalchemy
+
 from flask import Flask, render_template, redirect, url_for, request, session, flash
 from flask_wtf import FlaskForm
 from wtforms import FileField, SubmitField, StringField
@@ -7,7 +11,7 @@ from flask_wtf.file import FileField, FileAllowed
 import os
 from wtforms.validators import InputRequired, DataRequired, Length
 import socket
-import sqlalchemy
+
 
 #changed port number
 # Create Postgres Database Engine
@@ -150,11 +154,28 @@ temp_group = Groups("none", 0)#temp group fo testing
 def login():
     form = LoginForm()
     if request.method == "POST":
-        # dictionary of cookies
-        session["user"] = str(form.name.data)
-        print("this ran")
-        return redirect(url_for('home'))
-    return(render_template('login.html', form = form))
+        # Get the input from user
+        username = str(form.name.data)
+        password = str(form.password.data)
+
+        # Call to Database
+        user_id = chkd_db.login(username, password)
+
+        # User login failed
+        if(user_id == -1):
+            flash("The username or password you’ve entered is incorrect. Try again")
+            print("Fail")
+        
+        # User login success!
+        else:
+            session["user"] = username
+
+            # Go to home page
+            session.pop('_flashes',None)
+            return redirect(url_for('home'))
+        
+    # Close out of DB after using DB / webapp
+    return(render_template('login.html', form = form))  
     
 #home page
 @app.route('/home', methods=['GET',"POST"])
