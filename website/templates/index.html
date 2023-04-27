@@ -2,7 +2,10 @@
 <head>
     <title>Home</title>
 </head>
+
+
 <body>
+<<<<<<< HEAD
 
     <h1 style="text-align:center">Welcom to Quests:
     <div>{{user}}</div>
@@ -34,6 +37,37 @@
         </ul>
     {% endif %}
     {% endwith %}
+=======
+    <div class="container" style="display: flex;">
+        <div style="width: 35%;">
+            {% include "partials/sidebar.html" %}
+        </div>
+        <div style="flex-grow: 1;">
+            <h1 style="text-align:center">
+                Welcome to Quests:
+                <div>{{user}}</div>
+            </h1>
+            
+                {%if quest_check == 0 :%}
+                    <h2 style="text-align:center">No quest has been created yet, create a quest!:</h2>
+                    <h3 style="text-align:center">
+                    <form action="#" method="post">
+                    <button type="submit">Start</button>
+                    </form>    
+                    </h3>
+                {%else:%}
+                    <h2 style="text-align:center">A quest has been already created!:</h2>
+                    <h3 style="text-align:center">
+                    <form action="#" method="post">
+                    <button type="submit">veiw</button>
+                    </form>    
+                    </h3>
+                {%endif%}
+        </div>
+    </div>
+    
+    
+>>>>>>> stuckey
         
 </body>
 </html>

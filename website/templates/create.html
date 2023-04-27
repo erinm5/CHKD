@@ -3,18 +3,24 @@
     <title>Quest Creation</title>
 </head>
 <body>
-    <h1 style="text-align:center">Quest Creation:</h1>
-    <h2 style="text-align:center">
+    <div class="container" style="display: flex;">
+        <div style="width: 35%;">
+            {% include "partials/sidebar.html" %}
+        </div>
+        <div style="flex-grow: 1;">
+            <h1 style="text-align:center">Quest Creation:</h1>
+            <h2 style="text-align:center">
 
-    <form method="POST" action="#">
-        {{ form.csrf_token }}
-        <div>QUEST</div>
-        {{ form.quest(size=10, placeholder = "type quest name here", rows = 10, cols = 50, style="resize:none") }}
-        <div>RULES</div>
-        {{ form.rules(size=300, placeholder = "write your rules here", rows = 10, cols = 50, style="resize:none", value = "fuck it") }} 
-        <div></div>
-        <input type="submit" value="create">
-    </form>
-    </h2>
+            <form method="POST" action="#">
+                {{ form.csrf_token }}
+                <div>QUEST</div>
+                {{ form.quest(size=10, placeholder = "type quest name here", rows = 10, cols = 50, style="resize:none") }}
+                <div>RULES</div>
+                {{ form.rules(size=300, placeholder = "write your rules here", rows = 10, cols = 50, style="resize:none", value = "fuck it") }} 
+                <div></div>
+                <input type="submit" value="create">
+            </form>
+            </h2>
+        </div>
 </body>
 </html>

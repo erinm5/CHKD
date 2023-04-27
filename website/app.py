@@ -17,6 +17,19 @@ video_formats = [".mp4", ".webm"] # hardcoded video formats
 image_formats = [".jpg", ".png", "jpeg", ".gif",".bmp"] # hardcoded image formats
 audio_formats = [".mp3", ".m4a", ".wav"] # hardcoded audio formats
 
+# Hard coded groups and friends. This eventually needs to come from the database
+groups = [
+    {"name": "The Blue Boys", "hasNotification": False, "completedTasks": 2, "totalTasks": 5, "totalMembers": 6, "isMember": True},
+    {"name": "The Whalers", "hasNotification": True, "completedTasks": 1, "totalTasks": 3, "totalMembers": 12, "isMember": True},
+    {"name": "Team 3: Best!", "hasNotification": False, "completedTasks": 11, "totalTasks": 12, "totalMembers": 3, "isMember": True},
+    {"name": "Gang X", "hasNotification": False, "completedTasks": 2, "totalTasks": 5, "totalMembers": 6, "isMember": False}
+]
+
+friends = [
+    {"name": "ThwompFriend12", "isFriend": True},
+    {"name": "ToothStealer", "isFriend": False}
+]
+
 #root of the website folder
 root_path = os.path.dirname(os.path.abspath(__file__))
 app = Flask(__name__)
@@ -90,6 +103,23 @@ class Submission():
 #     ]
 #     return friends
 
+    
+# def getGroups():
+#     groups = [
+#         {"name": "The Blue Boys", "hasNotification": False, "completedTasks": 2, "totalTasks": 5, "totalMembers": 6, "isMember": True},
+#         {"name": "The Blue Boys", "hasNotification": True, "completedTasks": 1, "totalTasks": 3, "totalMembers": 12, "isMember": True},
+#         {"name": "The Blue Boys", "hasNotification": False, "completedTasks": 11, "totalTasks": 12, "totalMembers": 3, "isMember": True},
+#         {"name": "The Blue Boys", "hasNotification": False, "completedTasks": 2, "totalTasks": 5, "totalMembers": 6, "isMember": False}
+#     ]
+#     return groups
+
+# def getFriends():
+#     friends = [
+#         {"name": "ThwompFriend12", "isFriend": True},
+#         {"name": "ToothStealer", "isFriend": False}
+#     ]
+#     return friends
+
 #mediaType(), given an image name checks what type of media was uploaded
 #returns an int 1-image, 2-video, 3-audio
 def mediaType(img_name):
@@ -140,43 +170,39 @@ def home():
             else:
                 return redirect(url_for('create'))
     else: return redirect(url_for('login'))         
-    return render_template('index.html', quest_check = quest_check, user = session["user"])
+    return render_template('index.html', quest_check = quest_check, user = session["user"], groups=groups, friends=friends)
 
 
 #/create, collects text information to create a task
 #returns the upload page after any text is sumbitted
 @app.route('/create', methods=['GET', 'Post'])
 def create():
-    if "user" in session:
-        #create the quest
-        form = QuestForm()
-        if request.method == "POST":
-            quest = form.quest.data # First grab the file
-            rules = form.rules.data
-            temp_group.add_quest(quest, rules)
-            return redirect(url_for('upload', group = temp_group.id))
-        return render_template("create.html", form = form)
-    else: return redirect(url_for('login'))
+    #create the quest
+    form = QuestForm()
+    if request.method == "POST":
+        quest = form.quest.data # First grab the file
+        rules = form.rules.data
+        temp_group.add_quest(quest, rules)
+        return redirect(url_for('upload', group = temp_group.id))
+    return render_template("create.html", form = form, groups=groups, friends=friends)
 
 #/upload/<group> uploads files from the websever to the database, given the group number
 #returns redirect to watch page to veiw the submissions
 @app.route('/upload/<group>', methods=["GET", "POST"])
 def upload(group):
-    if "user" in session:
-        file_num = len(os.listdir(os.path.join(root_path, app.config['MEDIA_FOLDER']))) 
-        quest_msg = temp_group.quest
-        rules_msg = temp_group.rules
-        form = UploadFileForm()
-        if form.validate_on_submit():
-            file = form.file.data # First grab the file
-            #save the file to (file location of root + file in root + file name)
-            file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),app.config['MEDIA_FOLDER'],secure_filename(str(file_num) + file.filename))) # Then save the file
-            #update the fake databse
-            sub =Submission(session["user"], file.filename)
-            temp_submissions.append(sub)
-            return redirect(url_for('watch', curr = 0))
-        return render_template('upload.html', form=form, quest = quest_msg, rules =rules_msg)
-    else: return redirect(url_for('login'))  
+    file_num = len(os.listdir(os.path.join(root_path, app.config['MEDIA_FOLDER']))) 
+    quest_msg = temp_group.quest
+    rules_msg = temp_group.rules
+    form = UploadFileForm()
+    if form.validate_on_submit():
+        file = form.file.data # First grab the file
+        #save the file to (file location of root + file in root + file name)
+        file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),app.config['MEDIA_FOLDER'],secure_filename(str(file_num) + file.filename))) # Then save the file
+        #update the fake databse
+        sub =Submission(session["user"], file.filename)
+        temp_submissions.append(sub)
+        return redirect(url_for('watch', curr = 0))
+    return render_template('upload.html', form=form, quest = quest_msg, rules =rules_msg, groups=groups, friends=friends)
            
 
 #/watch/<curr> creates webpage to veiw the actual submissions, curr is the submission
@@ -215,7 +241,7 @@ def watch(curr):
         return redirect(url_for('watch', curr=curr))
     # Load the webpage
     else:
-            return  render_template('watch.html', user = temp_submissions[curr].user, filename = temp_submissions[curr].file, comments = temp_submissions[curr].comments , user_input = img_name, media = mediaType(img_name), curr = curr, files = folder_len, groups=groups, friends=friends, form = form)
+            return  render_template('watch.html', user = temp_submissions[curr].user, filename = temp_submissions[curr].file, comments = temp_submissions[curr].comments , user_input = img_name, media = mediaType(img_name), curr = curr, files = folder_len, groups=groups, friends=friends, groups=groups, friends=friends, form = form)
     
 
  #/results, webpage to veiw the top upvoted
@@ -236,13 +262,12 @@ def results():
             if temp_submissions[votes].votes == num_votes:
                 winner_index = votes
 
-        user_name = temp_submissions[winner_index].user
-        file_name = temp_submissions[winner_index].file
-        img_name = 'media/' + os.listdir(os.path.join(root_path, app.config['MEDIA_FOLDER']))[winner_index]
-        print(img_name)
-        print(winner_index)
-        return  render_template('results.html', user =user_name, file = file_name, user_input = img_name, media = mediaType(img_name), votes = num_votes)       
-    else: return redirect(url_for('login'))   
+    user_name = temp_submissions[winner_index].user
+    file_name = temp_submissions[winner_index].file
+    img_name = 'media/' + os.listdir(os.path.join(root_path, app.config['MEDIA_FOLDER']))[winner_index]
+    print(img_name)
+    print(winner_index)
+    return  render_template('results.html', user =user_name, file = file_name, user_input = img_name, media = mediaType(img_name), votes = num_votes, groups=groups, friends=friends)       
 
 
 
