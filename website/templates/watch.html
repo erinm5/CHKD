@@ -15,6 +15,7 @@
             <div>by: {{user}}</div>
             <div style="text-align: center">
                 {% if media == 1: %}
+                    <img width="500" height = "500">
                     <img src="{{url_for('static', filename=user_input)}}">
                 {% elif media == 2: %}
                     <video width="320" height="240" controls>
@@ -44,15 +45,11 @@
             </form>
 
             <h6>  
-            <div class = "col-lg-100"> 
-            <div class="container" style="display: flex;">         
             
-            <div style="width: 150%; background-color:#d9d9d9; border: 10px solid #262626; border-radius: 20px;" class="column left">
-            <div class = "col-2 offset-1 mt-5 text-center">
             <form method="POST" action="#">
                 {{ form.csrf_token }}
                 <div>Comments</div>
-                {{ form.comment(size=10, placeholder = "add comment", rows = 10, cols = 80, style="resize:none") }}
+                {{ form.comment(size=10, placeholder = "add comment", rows = 10, cols = 0, style="resize:none") }}
                 <div></div>
                 <button type="submit" name="submit_button" value="SUBMIT">SUBMIT</button>
                 {% for comment in comments: %}
@@ -60,6 +57,8 @@
                         <div class="col-lg-4 "></div>
                         <div class="col-lg-8 ">
                         <div>
+                            <div style="height:fit-content; background-color:#d9d9d9; border: 5px solid #262626; border-radius: 10px;" class="column right">
+                            <P>{{user}}:</P>
                             <p>{{comment}}</p>
                         </div>
                 {%endfor%}    

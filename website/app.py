@@ -293,6 +293,9 @@ def results():
         img_name = 'media/' + os.listdir(os.path.join(root_path, app.config['MEDIA_FOLDER']))[winner_index]
         print(img_name)
         print(winner_index)
+        if request.method == "POST":
+            return redirect(url_for('home'))
+
     else: return redirect(url_for('login'))
     return  render_template('results.html', user =user_name, file = file_name, user_input = img_name, media = mediaType(img_name), votes = num_votes, groups=groups, friends=friends)       
 
