@@ -8,6 +8,11 @@ import os
 from wtforms.validators import InputRequired, DataRequired, Length
 import socket
 
+
+
+# Create Postgres Database Engine
+engine = sqlalchemy.create_engine('postgresql://postgres:postgres@localhost:5433/CHKD')
+
 video_formats = [".mp4", ".webm"] # hardcoded video formats
 image_formats = [".jpg", ".png", "jpeg", ".gif",".bmp"] # hardcoded image formats
 audio_formats = [".mp3", ".m4a", ".wav"] # hardcoded audio formats
@@ -26,6 +31,10 @@ app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 class QuestForm(FlaskForm):
     quest = StringField('quest', widget = TextArea(), validators=[DataRequired(), Length(max= 500)])
     rules = StringField('rules', widget = TextArea(), validators=[DataRequired(), Length(max= 500)])
+
+class CommentForm(FlaskForm):
+    comment = StringField('comment', widget = TextArea(), validators=[Length(max= 500)])
+
 
 #gets quest submission
 class UploadFileForm(FlaskForm):
@@ -57,10 +66,29 @@ class Submission():
         self.user = user
         self.file = file
         self.votes = 0
+        self.comments = []
     def upvote(self):
         self.votes += 1
     def downvote(self):
         self.votes -=1
+    def commnet(self, input):
+        self.comments.append(input)
+    
+# def getGroups():
+#     groups = [
+#         {"name": "The Blue Boys", "hasNotification": False, "completedTasks": 2, "totalTasks": 5, "totalMembers": 6, "isMember": True},
+#         {"name": "The Blue Boys", "hasNotification": True, "completedTasks": 1, "totalTasks": 3, "totalMembers": 12, "isMember": True},
+#         {"name": "The Blue Boys", "hasNotification": False, "completedTasks": 11, "totalTasks": 12, "totalMembers": 3, "isMember": True},
+#         {"name": "The Blue Boys", "hasNotification": False, "completedTasks": 2, "totalTasks": 5, "totalMembers": 6, "isMember": False}
+#     ]
+#     return groups
+
+# def getFriends():
+#     friends = [
+#         {"name": "ThwompFriend12", "isFriend": True},
+#         {"name": "ToothStealer", "isFriend": False}
+#     ]
+#     return friends
 
 #mediaType(), given an image name checks what type of media was uploaded
 #returns an int 1-image, 2-video, 3-audio
@@ -77,7 +105,7 @@ def mediaType(img_name):
 
 #FAKE DATABSE!
 #This is here beacause I havent connected the website to the data base yet
-temp_submissions = []  #temp array to all quest submissions
+temp_submissions = []  #temp list to all quest submissions  
 temp_group = Groups("none", 0)#temp group fo testing
 
 # post means user input
@@ -155,38 +183,42 @@ def upload(group):
 #returns the next or previous submission, or redirects to the voting page
 @app.route('/watch/<curr>', methods=['GET', 'POST'])
 def watch(curr):
-    if "user" in session:
-        curr = int(curr)
-        folder_len = len(os.listdir(os.path.join(root_path, app.config['MEDIA_FOLDER']))) -1
-        img_name = 'media/' + os.listdir(os.path.join(root_path, app.config['MEDIA_FOLDER']))[curr]
-        #check what button is pressed
-        if request.method == "POST":
-            button = request.form["submit_button"]
-            if(button == "NEXT"):
-                if curr == folder_len:
-                    print(folder_len)
-                else:
-                    curr += 1
-            if(button == "PREV"):
-                if curr == 0:
-                    print("No previous files")
-                else:
-                    curr -= 1
-            if(button == "NEW"):
-                return redirect(url_for('upload', group = temp_group.id))
-            if(button == "UP"):
-                temp_submissions[curr].upvote()
-                print("Current vote counter:")
-                print(temp_submissions[curr].votes)
-                return redirect(url_for('results'))        
-            #load next media file
-            return redirect(url_for('watch', curr=curr))
-        # Load the webpage
-        else:
-                return  render_template('watch.html', user = temp_submissions[curr].user, filename = temp_submissions[curr].file, user_input = img_name, media = mediaType(img_name), curr = curr, files = folder_len)
-    else: return redirect(url_for('login'))   
+    form = CommentForm()
+    curr = int(curr)
+    folder_len = len(os.listdir(os.path.join(root_path, app.config['MEDIA_FOLDER']))) -1
+    img_name = 'media/' + os.listdir(os.path.join(root_path, app.config['MEDIA_FOLDER']))[curr]
+    #check what button is pressed
+    if request.method == "POST":
+        button = request.form["submit_button"]
+        if(button == "NEXT"):
+            if curr == folder_len:
+                print(folder_len)
+            else:
+                curr += 1
+        if(button == "PREV"):
+            if curr == 0:
+                print("No previous files")
+            else:
+                curr -= 1
+        if(button == "NEW"):
+            return redirect(url_for('upload', group = temp_group.id))
+        if(button == "UP"):
+            temp_submissions[curr].upvote()
+            print("Current vote counter:")
+            print(temp_submissions[curr].votes)
+            return redirect(url_for('results'))        
+        #load next media file
+        if(button == "SUBMIT"):
+            print(form.comment.data)
+            temp_submissions[curr].commnet(form.comment.data)
 
- #/results, webpage to veiw the top upvoted, does not handle ties correctly 
+        return redirect(url_for('watch', curr=curr))
+    # Load the webpage
+    else:
+            return  render_template('watch.html', user = temp_submissions[curr].user, filename = temp_submissions[curr].file, comments = temp_submissions[curr].comments , user_input = img_name, media = mediaType(img_name), curr = curr, files = folder_len, groups=groups, friends=friends, form = form)
+    
+
+ #/results, webpage to veiw the top upvoted
  #this is not fully coded yet
 @app.route('/results', methods=['GET', 'POST'])
 def results():
