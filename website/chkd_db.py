@@ -76,7 +76,9 @@ def addFriend(userA, userB):
     
     elif relationship == 'REQUESTED':
         # Make the Database Call
-        cur.execute("UPDATE public.relation SET relationship='FRIENDS',created_at=%s WHERE userA=%s and userB=%s",[curr_time, userA, userB])
+        cur.execute("UPDATE public.relation \
+                    SET relationship='FRIENDS',created_at=%s \
+                    WHERE userA=%s and userB=%s",[curr_time, userA, userB])
         conn.commit()    
         return 1
     

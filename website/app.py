@@ -186,7 +186,10 @@ def create():
         rules = form.rules.data
         temp_group.add_quest(quest, rules)
 
+        #WIP just 
         # Get the USER ID and GROUP ID
+        user = session.get("user")
+        #group = 
 
         # Get the input from user
         title = str(form.quest.data)
